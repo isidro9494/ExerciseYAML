@@ -1,0 +1,35 @@
+# Para prohibir pods en un grupo especifico se usara lo siguiente: nodeSelector , affinity  tolerations
+application:
+  name: "Ping Helm Chart"
+ nodeSelector:
+  disallowed-node-group: "true"
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: disallowed-node-group
+              operator: NotIn
+              values:
+                - "true"
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - your-app-label
+        topologyKey: "kubernetes.io/hostname"
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: "topology.kubernetes.io/zone"
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app: your-app-label
+# para implementacion de pods en diferentes zonas  de disponibilidad lo he hecho con usando esto topologySpreadConstraints y los nombres de las zonas que deseamos implementar
+#Para asegurarse de que no se programará un pod en un nodo que ya esta el mismo pod del mismo tipo, utilizamos :podAntiAffinity mas los valores que necesitemos en este caso que pongo en el supuesto
+# Para prohibir que los pods se programen en grupos de nodos específicos, puede usar , y :affinity en este caso mas nodeSelectorTerms para el tipo de especificacion que querramos
